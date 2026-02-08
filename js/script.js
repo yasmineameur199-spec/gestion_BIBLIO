@@ -8,9 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFromStorage();
     renderBooks();
     
-    document.getElementById('add_button').addEventListener('click', addBook);
-    document.getElementById('search_input').addEventListener('input', filterBooks);
-    document.getElementById('reset_button').addEventListener('click', resetAll);
+    document.querySelector('add_button').addEventListener('click', addBook);
+    document.querySelector('search_input').addEventListener('input', filterBooks);
+    document.querySelector('reset_button').addEventListener('click', resetAll);
 });
 
 function loadFromStorage() {
@@ -33,10 +33,10 @@ function saveToStorage() {
 }
 
 function addBook() {
-    const title = document.getElementById('title_input').value.trim();
-    const author = document.getElementById('author_input').value.trim();
-    const category = document.getElementById('category_select').value;
-    const isbn = document.getElementById('isbn_input').value.trim();
+    const title = document.querySelector('title_input').value.trim();
+    const author = document.querySelector('author_input').value.trim();
+    const category = document.querySelector('category_select').value;
+    const isbn = document.querySelector('isbn_input').value.trim();
 
     if (!title || !author || isbn.length < 4) {
         showMessage('Veuillez remplir correctement tous les champs', true);
@@ -68,7 +68,7 @@ function deleteBook(id) {
 }
 
 function renderBooks(filtered = books) {
-    const tbody = document.getElementById('books_tbody');
+    const tbody = document.querySelector('books_tbody');
     tbody.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -90,11 +90,11 @@ function renderBooks(filtered = books) {
         tbody.appendChild(tr);
     });
 
-    document.getElementById('book_count').textContent = filtered.length;
+    document.querySelector('book_count').textContent = filtered.length;
 }
 
 function filterBooks() {
-    const term = document.getElementById('search_input').value.toUpperCase();
+    const term = document.querySelector('search_input').value.toUpperCase();
     const filtered = books.filter(book =>
         book.title.toUpperCase().includes(term) ||
         book.author.toUpperCase().includes(term)
@@ -103,9 +103,9 @@ function filterBooks() {
 }
 
 function clearForm() {
-    document.getElementById('title_input').value = '';
-    document.getElementById('author_input').value = '';
-    document.getElementById('isbn_input').value = '';
+    document.querySelector('title_input').value = '';
+    document.querySelector('author_input').value = '';
+    document.querySelector('isbn_input').value = '';
 }
 
 function resetAll() {
@@ -118,7 +118,7 @@ function resetAll() {
 }
 
 function showMessage(text, isError = false) {
-    const zone = document.getElementById('message_zone');
+    const zone = document.querySelector('message_zone');
     zone.textContent = text;
     zone.style.color = isError ? '#f44336' : '#ffeb3b';
     setTimeout(() => zone.textContent = '', 3000);

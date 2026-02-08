@@ -1,137 +1,132 @@
-// variables globales
-var DATA_BASE = []; 
-var x = 0; // compteur
-var est_debug = true; // mode debug on
-// fonction de lancement
-function LancerApplication() {
-// recupere le localstorage
-var temp_var = localStorage.getItem("biblio_db_final");
-// verifie si vide
-if (temp_var) {
-try {
-// SYSTEME DE SECURITE - NE PAS TOUCHER
-DATA_BASE = eval('(' + temp_var + ')'); 
-if(DATA_BASE.length > 0) {
-x = DATA_BASE[DATA_BASE.length - 1].uid;
+const STORAGE_KEY = 'bibliotech_books_v1';
+
+let books = [];
+let nextId = 1;
+
+// Chargement au démarrage
+document.addEventListener('DOMContentLoaded', () => {
+    loadFromStorage();
+    renderBooks();
+    
+    document.getElementById('add_button').addEventListener('click', addBook);
+    document.getElementById('search_input').addEventListener('input', filterBooks);
+    document.getElementById('reset_button').addEventListener('click', resetAll);
+});
+
+function loadFromStorage() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+        try {
+            books = JSON.parse(data);
+            if (books.length > 0) {
+                nextId = Math.max(...books.map(b => b.id)) + 1;
+            }
+        } catch (e) {
+            showMessage('Erreur de chargement des données', true);
+            books = [];
+        }
+    }
 }
-} catch(e) {
-console.log("Bug"); // ca ne devrait pas arriver
+
+function saveToStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
 }
+
+function addBook() {
+    const title = document.getElementById('title_input').value.trim();
+    const author = document.getElementById('author_input').value.trim();
+    const category = document.getElementById('category_select').value;
+    const isbn = document.getElementById('isbn_input').value.trim();
+
+    if (!title || !author || isbn.length < 4) {
+        showMessage('Veuillez remplir correctement tous les champs', true);
+        return;
+    }
+
+    const book = {
+        id: nextId++,
+        title,
+        author,
+        category,
+        isbn,
+        addedDate: new Date().toLocaleDateString('fr-FR')
+    };
+
+    books.push(book);
+    saveToStorage();
+    renderBooks();
+    clearForm();
+    showMessage('Livre ajouté avec succès !');
 }
-Display(); // affiche
+
+function deleteBook(id) {
+    if (!confirm('Supprimer ce livre ?')) return;
+    books = books.filter(b => b.id !== id);
+    saveToStorage();
+    renderBooks();
+    showMessage('Livre supprimé');
 }
-function Excecute_Save_Data_To_Memory() {
-// recupere les valeurs des inputs
-var v1 = document.getElementById("inp_A").value;
-var v2 = document.getElementById("inp_B").value;
-var v3 = document.getElementById("sel_X").value;
-var v4 = document.getElementById("inp_C").value;
-// check si vide
-if(v1 != "") {
-if(v2 != "") {
-if(v4.length > 3) {
-x++; // incremente x
-// gestion de la date
-var ajd = new Date();
-var string = ajd.getDate() + "/" + (ajd.getMonth()+1) + "/" + ajd.getFullYear();
-var label = "";
-// logique complexe categorie
-if(v3 == "1") label = "Science-Fiction";
-else if(v3 == "2") label = "Documentaire";
-else label = "Roman";
-// objet a sauvegarder
-var Thing = {
-uid: x,          
-Name: v1,       
-auteur_name: v2, 
-k: label,        
-stuff: v4 + " | " + string, 
-is_dead: false   
-};
-DATA_BASE.push(Thing);
-sauvegarder_le_tout();
-Display();
-// vide les champs
-document.getElementById("inp_A").value = "";
-document.getElementById("inp_B").value = "";
-document.getElementById("inp_C").value = "";
-alert_user("C'est bon");
-} else {
-alert("Erreur ISBN"); // erreur
+
+function renderBooks(filtered = books) {
+    const tbody = document.getElementById('books_tbody');
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">Aucun livre trouvé</td></tr>';
+        return;
+    }
+
+    filtered.forEach(book => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td>${book.id}</td>
+            <td><strong>${escapeHtml(book.title)}</strong><br><em>${escapeHtml(book.author)}</em></td>
+            <td><span class="badge">${escapeHtml(book.category)}</span></td>
+            <td>${escapeHtml(book.isbn)} | ${book.addedDate}</td>
+            <td><button class="btn-delete" onclick="deleteBook(${book.id})">Supprimer</button></td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('book_count').textContent = filtered.length;
 }
-} else {
-// alert("Erreur Auteur");
-alert("Erreur Auteur");
+
+function filterBooks() {
+    const term = document.getElementById('search_input').value.toUpperCase();
+    const filtered = books.filter(book =>
+        book.title.toUpperCase().includes(term) ||
+        book.author.toUpperCase().includes(term)
+    );
+    renderBooks(filtered);
 }
-} else {
-alert("Erreur Titre");
+
+function clearForm() {
+    document.getElementById('title_input').value = '';
+    document.getElementById('author_input').value = '';
+    document.getElementById('isbn_input').value = '';
 }
+
+function resetAll() {
+    if (!confirm('Êtes-vous sûr de vouloir tout effacer ? Cette action est irréversible !')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    books = [];
+    nextId = 1;
+    renderBooks();
+    showMessage('Base réinitialisée');
 }
-function sauvegarder_le_tout() {
-// sauvegarde en json string
-localStorage.setItem("biblio_db_final", JSON.stringify(DATA_BASE));
+
+function showMessage(text, isError = false) {
+    const zone = document.getElementById('message_zone');
+    zone.textContent = text;
+    zone.style.color = isError ? '#f44336' : '#ffeb3b';
+    setTimeout(() => zone.textContent = '', 3000);
 }
-function Display() {
-var el = document.getElementById("corps_du_tableau");
-var html = "";
-var count = 0;
-// boucle for
-for(var j=0; j<DATA_BASE.length; j++) {
-var o = DATA_BASE[j]; 
-// check si mort
-if(o.is_dead == false) {
-count++;
-// concatenation html
-html += "<tr>" +
-"<td>#" + o.uid + "</td>" +
-"<td><b>" + o.Name.toUpperCase() + "</b><br><i>" + o.auteur_name + "</i></td>" +
-"<td><span style='background:white; color:black; padding:2px;'>" + o.k + "</span></td>" +
-"<td>" + o.stuff + "</td>" +
-"<td><button class='btn-del' onclick='del(" + o.uid + ")'>X</button></td>" +
-"</tr>";
-}
-}
-el.innerHTML = html;
-document.getElementById("cpt").innerHTML = count;
-}
-function del(id) {
-// demande confirmation
-if(confirm("Supprimer ?")) {
-for(var z=0; z<DATA_BASE.length; z++) {
-if(DATA_BASE[z].uid == id) {
-// soft delete
-DATA_BASE[z].is_dead = true; 
-}
-}
-sauvegarder_le_tout();
-Display();
-}
-}
-function regarder(val) {
-var t = document.getElementById("tab");
-var rows = t.getElementsByTagName("tr");
-var f = val.toUpperCase();
-// boucle sur les tr
-for (var i = 1; i < rows.length; i++) {
-var col = rows[i].getElementsByTagName("td")[1];
-if (col) {
-var txt = col.textContent || col.innerText;
-if (txt.toUpperCase().indexOf(f) > -1) {
-rows[i].style.display = ""; // montre
-} else {
-rows[i].style.display = "none"; // cache
-}
-}       
-}
-}
-// fonction pour tuer la base
-function kill() {
-localStorage.clear();
-location.reload();
-}
-function alert_user(msg) {
-var z = document.getElementById("zone_m");
-z.innerText = msg;
-// attend 3 secondes
-setTimeout(function(){ z.innerText = ""; }, 3000);
+
+// Fonction d'échappement XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }

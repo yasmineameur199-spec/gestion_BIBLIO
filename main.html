@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech Manager</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="wrapper">
+        <h1>📚 BiblioTech Manager</h1>
+
+        <section class="add-form">
+            <input type="text" id="title_input" placeholder="Titre du livre" required>
+            <input type="text" id="author_input" placeholder="Auteur" required>
+            <select id="category_select">
+                <option value="Science-Fiction">Science-Fiction</option>
+                <option value="Documentaire">Documentaire</option>
+                <option value="Roman">Roman</option>
+            </select>
+            <input type="text" id="isbn_input" placeholder="ISBN" required minlength="4">
+            <button id="add_button">Enregistrer</button>
+        </section>
+
+        <section class="search">
+            <input type="text" id="search_input" placeholder="Rechercher par titre ou auteur...">
+        </section>
+
+        <p id="message_zone" aria-live="polite"></p>
+
+        <h2>Inventaire (<span id="book_count">0</span>)h2>
+
+        <table id="books_table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Livre</th>
+                    <th>Catégorie</th>
+                    <th>ISBN & Ajout</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="books_tbody">
+                <!-- Rempli par JS -->
+            </tbody>
+        </table>
+
+        <button id="reset_button" class="danger">⚠️ Réinitialiser toute la base</button>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
